@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>FanWare — External + Injector</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#07070b; --panel:#121218; --panel2:#181822; --line:#2a2a36;
+  --text:#ececf1; --muted:#9a9aaa; --blue:#3b6cff; --blue-soft:#8aa4ff;
+  --green:#3dd68c; --yellow:#f5c542; --red:#ff5c6c; --track:#2c2c38;
+  --title:#1f5fd6;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:Outfit,system-ui,sans-serif; background:var(--bg); color:var(--text);
+  background-image:radial-gradient(900px 420px at 80% -10%,rgba(59,108,255,.22),transparent 60%),
+    linear-gradient(#07070b,#0b0b12); min-height:100vh;
+}
+a{color:inherit; text-decoration:none}
+header,main,footer{max-width:1200px; margin:0 auto; padding:20px 24px}
+header{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+.brand{display:flex; gap:12px; align-items:center}
+.logo{width:36px; height:36px; border-radius:8px; background:var(--blue); display:grid; place-items:center; font-weight:700}
+.sub{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted)}
+nav{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+nav a{color:#c8c8d2; font-size:14px; padding:6px 10px; border-radius:999px}
+nav a:hover{background:rgba(255,255,255,.05)}
+.pill{border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:6px 12px; font-size:13px}
+.btn{background:var(--blue); color:#fff; border:0; border-radius:999px; padding:10px 16px; font:inherit; cursor:pointer; display:inline-block; font-size:13px}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.ghost{background:transparent; border:1px solid rgba(255,255,255,.15); color:#d6d6e0}
+.ok{background:#163226; border:1px solid #2a6a4a; color:#b6f0d0}
+.danger{background:#3a1a22; border:1px solid #6a2a36; color:#ffb0ba}
+h1{font-size:clamp(36px,6vw,64px); line-height:.95; margin:8px 0 12px; letter-spacing:-.03em}
+h2{margin:0 0 14px; font-size:22px}
+h3{margin:0 0 8px; font-size:15px; color:var(--blue-soft)}
+.kicker{font-family:"IBM Plex Mono",monospace; letter-spacing:.18em; text-transform:uppercase; font-size:12px; color:var(--blue-soft)}
+.muted{color:var(--muted); font-size:14px}
+.hero{display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:start; margin-top:12px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px}
+.grid{display:grid; gap:12px}
+.cols-2{grid-template-columns:repeat(2,1fr)}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.feat{padding:14px; border:1px solid var(--line); border-radius:12px; background:#15151d}
+.feat b{display:block; margin-bottom:4px}
+.feat span{font-size:13px; color:var(--muted)}
+.tag{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:10px; padding:2px 7px; border-radius:999px; margin-right:4px}
+.tag.ext{background:#1a2a3a; color:#9ec5ff}
+.tag.inj{background:#2a2410; color:#f5c542}
+.tag.both{background:#1a2a22; color:#9ef0c0}
+section{margin-top:48px}
+footer{margin:48px auto 24px; border-top:1px solid var(--line); color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:13px}
+code,pre{font-family:"IBM Plex Mono",monospace}
+code{font-size:12px; background:#1a1a24; padding:2px 6px; border-radius:4px}
+pre{margin:0; padding:14px; overflow:auto; font-size:12px; color:#d7e2ff; background:#0e0e16; border-radius:10px; border:1px solid #222230}
+.bar{display:flex; justify-content:space-between; align-items:center; padding:8px 14px; border-bottom:1px solid var(--line); font-size:12px; color:var(--muted)}
+
+/* interactive FanWare Lite shell */
+.lite-wrap{display:grid; grid-template-columns:360px 300px 1fr; gap:16px; align-items:start}
+.lite{
+  width:360px; background:#0f0f12; border:1px solid #2a2a36; border-radius:10px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55); overflow:hidden; user-select:none;
+}
+.esp3d{
+  width:300px; background:#0f0f12; border:1px solid #2a2a36; border-radius:10px;
+  box-shadow:0 18px 50px rgba(0,0,0,.45); overflow:hidden; user-select:none;
+  display:flex; flex-direction:column;
+}
+.esp3d-title{
+  background:#162033; color:#cfe0ff; font-weight:600; font-size:12px;
+  padding:10px 12px; display:flex; justify-content:space-between; align-items:center;
+  border-bottom:1px solid #243049;
+}
+.esp3d-body{padding:10px; display:flex; flex-direction:column; gap:8px}
+.esp3d canvas{
+  width:100%; height:260px; border-radius:8px; background:#0a0c12;
+  border:1px solid #1e2433; display:block;
+}
+.esp3d-meta{font-size:11px; color:#8a8a98; line-height:1.45}
+.esp3d-meta b{color:#c8d4f0}
+.esp3d.dim{opacity:.55; filter:grayscale(.2)}
+@media(max-width:1100px){
+  .lite-wrap{grid-template-columns:1fr}
+  .esp3d{width:100%}
+}
+.lite-title{
+  background:var(--title); color:#fff; font-weight:600; font-size:13px;
+  padding:10px 12px; display:flex; justify-content:space-between; align-items:center;
+}
+.lite-body{padding:12px}
+.lite-hint{font-size:11px; color:#7a7a88; margin-bottom:8px; line-height:1.4}
+.lite-tabs{display:flex; gap:4px; margin:8px 0 10px; flex-wrap:wrap}
+.lite-tab{
+  border:0; background:#1a1a22; color:#aaa; border-radius:6px; padding:7px 10px;
+  cursor:pointer; font:inherit; font-size:12px;
+}
+.lite-tab.active{background:#1f3a70; color:#fff}
+.lite-panel{display:none}
+.lite-panel.active{display:block}
+.lite-row{display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px}
+.lite-row label{flex:1}
+.lite input[type="checkbox"]{accent-color:#3b6cff; width:15px; height:15px}
+.lite input[type="range"]{width:100%; accent-color:#3b6cff}
+.lite select,.lite input[type="text"],.lite textarea{
+  width:100%; background:#14141c; border:1px solid #303044; color:#eee;
+  border-radius:6px; padding:8px; font:inherit; font-size:12px;
+}
+.lite textarea{min-height:110px; resize:vertical; font-family:"IBM Plex Mono",monospace}
+.lite .slider-label{display:flex; justify-content:space-between; font-size:12px; color:#bbb; margin-top:4px}
+.lite .btn-row{display:flex; gap:6px; flex-wrap:wrap; margin:8px 0}
+.lite .btn-sm{
+  background:#1f5fd6; color:#fff; border:0; border-radius:6px; padding:7px 10px;
+  font:inherit; font-size:12px; cursor:pointer;
+}
+.lite .btn-sm.ghost{background:#222230; border:1px solid #333}
+.lite .btn-sm:hover{filter:brightness(1.08)}
+.lite-console{
+  background:#0a0a10; border:1px solid #222230; border-radius:8px; height:120px;
+  overflow:auto; padding:8px; font-family:"IBM Plex Mono",monospace; font-size:11px;
+}
+.lite-console .l0{color:#8cd3ff}
+.lite-console .l1{color:#f0c45a}
+.lite-console .l2{color:#ff6b6b}
+.lite-foot{margin-top:10px; padding-top:8px; border-top:1px solid #222230; font-size:11px; color:#8a8a98; line-height:1.5}
+.side-note{font-size:13px; color:var(--muted); line-height:1.55}
+.side-note li{margin:6px 0}
+.status-pills{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
+.status-pills span{font-family:"IBM Plex Mono",monospace; font-size:11px; border:1px solid #333; border-radius:999px; padding:4px 10px; transition:border-color .25s,color .25s,box-shadow .25s}
+.status-pills .up{border-color:#2a6a4a; color:#b6f0d0; box-shadow:0 0 12px rgba(61,214,140,.25)}
+.status-pills .down{border-color:#6a2a36; color:#ffb0ba}
+.status-pills .pulse{animation:pillPulse .7s ease}
+@keyframes pillPulse{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+/* console line + activity feed animations */
+.lite-console .line{
+  opacity:0; transform:translateY(6px);
+  animation:lineIn .28s ease forwards;
+  white-space:pre-wrap; word-break:break-word; margin:2px 0;
+}
+.lite-console .l0{color:#8cd3ff}
+.lite-console .l1{color:#f0c45a}
+.lite-console .l2{color:#ff6b6b}
+@keyframes lineIn{to{opacity:1; transform:none}}
+
+.activity{
+  margin-top:12px; background:#0e0e16; border:1px solid #222230; border-radius:12px;
+  overflow:hidden;
+}
+.activity .bar{border-bottom:1px solid #222230}
+.activity-feed{max-height:220px; overflow:auto; padding:10px 12px}
+.act-item{
+  display:flex; gap:10px; align-items:flex-start;
+  padding:8px 0; border-bottom:1px solid #1a1a24;
+  opacity:0; transform:translateX(-10px);
+  animation:actIn .35s ease forwards;
+}
+.act-item:last-child{border-bottom:0}
+@keyframes actIn{to{opacity:1; transform:none}}
+.act-dot{
+  width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0;
+  background:var(--blue-soft); box-shadow:0 0 8px rgba(138,164,255,.5);
+}
+.act-item.ok .act-dot{background:var(--green); box-shadow:0 0 8px rgba(61,214,140,.5)}
+.act-item.warn .act-dot{background:var(--yellow); box-shadow:0 0 8px rgba(245,197,66,.45)}
+.act-item.err .act-dot{background:var(--red); box-shadow:0 0 8px rgba(255,92,108,.5)}
+.act-body{flex:1; min-width:0}
+.act-body b{display:block; font-size:13px; color:#e8e8f0; font-weight:600}
+.act-body span{font-size:12px; color:var(--muted); line-height:1.4}
+.act-time{font-family:"IBM Plex Mono",monospace; font-size:10px; color:#666; white-space:nowrap}
+
+/* floating capability chips that pop on attach / execute */
+.cap-stage{
+  position:relative; min-height:56px; margin-top:12px;
+  display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;
+}
+.cap-chip{
+  font-family:"IBM Plex Mono",monospace; font-size:11px;
+  border:1px solid #2a3550; background:#141a28; color:#9ec5ff;
+  border-radius:999px; padding:6px 12px;
+  opacity:0; transform:translateY(8px) scale(.96);
+  animation:chipIn .4s ease forwards;
+}
+.cap-chip.ext{border-color:#1a3a2a; background:#122018; color:#9ef0c0}
+.cap-chip.inj{border-color:#3a3010; background:#221c10; color:#f5c542}
+@keyframes chipIn{to{opacity:1; transform:none}}
+.cap-chip.out{animation:chipOut .3s ease forwards}
+@keyframes chipOut{to{opacity:0; transform:translateY(-6px) scale(.96)}}
+
+.toast-stack{
+  position:fixed; right:18px; bottom:18px; z-index:80;
+  display:flex; flex-direction:column; gap:8px; pointer-events:none;
+}
+.toast{
+  min-width:220px; max-width:320px;
+  background:#121820; border:1px solid #2a3550; color:#e8eefc;
+  border-radius:12px; padding:12px 14px; font-size:13px;
+  box-shadow:0 12px 40px rgba(0,0,0,.45);
+  opacity:0; transform:translateY(12px);
+  animation:toastIn .35s ease forwards;
+}
+.toast.ok{border-color:#2a6a4a}
+.toast.err{border-color:#6a2a36}
+.toast.hide{animation:toastOut .3s ease forwards}
+@keyframes toastIn{to{opacity:1; transform:none}}
+@keyframes toastOut{to{opacity:0; transform:translateY(8px)}}
+
+.lite.attached{box-shadow:0 18px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(61,214,140,.35)}
+.lite-title .live-dot{
+  width:8px; height:8px; border-radius:50%; background:#3dd68c;
+  box-shadow:0 0 8px rgba(61,214,140,.8); display:inline-block; margin-right:6px;
+  animation:liveBlink 1.4s ease infinite;
+}
+@keyframes liveBlink{0%,100%{opacity:1}50%{opacity:.35}}
+
+.flow{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.flow .step{background:#15151d; border:1px solid var(--line); border-radius:12px; padding:14px}
+.flow .n{font-family:"IBM Plex Mono",monospace; color:var(--blue-soft); font-size:12px}
+.flow b{display:block; margin:6px 0 4px}
+
+table.feat-table{width:100%; border-collapse:collapse; font-size:13px}
+table.feat-table th, table.feat-table td{border-bottom:1px solid #222230; padding:10px 8px; text-align:left}
+table.feat-table th{color:var(--muted); font-weight:500; font-size:12px}
+table.feat-table td:nth-child(2), table.feat-table td:nth-child(3){font-family:"IBM Plex Mono",monospace; font-size:12px}
+
+@media(max-width:980px){
+  .hero,.lite-wrap,.flow,.cols-2,.cols-3{grid-template-columns:1fr}
+  .lite,.esp3d{width:100%}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">F</div>
+    <div>
+      <div style="font-weight:600">FanWare</div>
+      <div class="sub">external · injector · executor</div>
+    </div>
+  </div>
+  <nav>
+    <a href="#features">features</a>
+    <a href="#demo">live ui</a>
+    <a href="#executor">executor</a>
+    <a href="#build">build</a>
+    <a href="portal.html" class="pill">portal</a>
+    <a href="index.html" class="pill">home</a>
+  </nav>
+</header>
+
+<main>
+  <div class="kicker">product</div>
+  <h1>FanWare <span style="color:var(--blue-soft)">Lite</span></h1>
+  <p class="muted" style="max-width:640px; font-size:16px; line-height:1.5">
+    Hybrid external + DLL injector for Roblox. DX11 overlay, CamLock aim, ESP, stretch/lighting/sky,
+    movement, UNC-aware executor, and a FanWare Lite menu you can try in the browser.
+  </p>
+
+  <div class="hero" style="margin-top:28px">
+    <div>
+      <div class="status-pills" id="statusPills">
+        <span id="pillAttach" class="down">external attach</span>
+        <span id="pillOverlay" class="down">dx11 overlay</span>
+        <span id="pillQueue" class="down">executor queue</span>
+        <span id="bridgePill" class="down">bridge down</span>
+      </div>
+      <div class="cap-stage" id="capStage" aria-live="polite"></div>
+      <div class="grid cols-2" style="margin-top:14px">
+        <div class="feat"><b>External</b><span>Read process memory, aim, ESP, stretch — no inject required.</span></div>
+        <div class="feat"><b>Injector</b><span>FanwareDLL + named-pipe bridge for script exec, sky inject, UNC stubs.</span></div>
+        <div class="feat"><b>Executor</b><span>Paste plain Luau. Optional UNC bootstrap. Console log in-menu.</span></div>
+        <div class="feat"><b>VS build</b><span>Fanware.sln · x64 · NuGet-aware · imgui_clean vendored.</span></div>
+      </div>
+      <div style="margin-top:18px; display:flex; gap:8px; flex-wrap:wrap">
+        <a class="btn" href="#demo">open live menu</a>
+        <a class="btn ghost" href="#build">build steps</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="bar"><span>architecture</span><span>step 14</span></div>
+      <pre style="border:0; border-radius:0 0 12px 12px">FanwareExternal.exe  (external)
+  ├─ attach RobloxPlayerBeta
+  ├─ DX11 overlay + ImGui menu
+  ├─ players / camera / aim / esp
+  └─ optional: inject FanwareDLL.dll
+        ├─ named pipe bridge
+        ├─ ExecScript queue
+        ├─ Strategy A (ScriptContext)
+        └─ UNC bootstrap + stubs</pre>
+    </div>
+  </div>
+
+  <section id="features">
+    <h2>Feature map</h2>
+    <div class="card" style="overflow:auto">
+      <table class="feat-table">
+        <thead>
+          <tr><th>Feature</th><th>External</th><th>Injector</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Aimbot (CamLock / Mouse)</td><td>yes</td><td>—</td><td>FOV, smooth, prediction, part select</td></tr>
+          <tr><td>Triggerbot</td><td>yes</td><td>—</td><td>delay + keybind</td></tr>
+          <tr><td>Silent aim</td><td>yes</td><td>path</td><td>external W2S sort; inj path optional</td></tr>
+          <tr><td>ESP (box / skeleton / tracers)</td><td>yes</td><td>—</td><td>team colors</td></tr>
+          <tr><td>Stretch res</td><td>yes</td><td>yes</td><td>mode toggle in Visuals</td></tr>
+          <tr><td>Lighting / clock</td><td>yes</td><td>—</td><td>brightness + time</td></tr>
+          <tr><td>Custom sky</td><td>—</td><td>yes</td><td>sky inject via DLL</td></tr>
+          <tr><td>Fly / noclip / speed</td><td>yes</td><td>yes</td><td>Misc rage section</td></tr>
+          <tr><td>Executor (Luau)</td><td>—</td><td>yes</td><td>bridge + queue; Strategy A arm for live run</td></tr>
+          <tr><td>UNC groups</td><td>—</td><td>yes</td><td>env, identity, FS, HTTP, drawing…</td></tr>
+          <tr><td>AI helper</td><td>local</td><td>—</td><td>template snippets into editor</td></tr>
+          <tr><td>Song player / avatar3d</td><td>yes</td><td>—</td><td>local preview</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="demo">
+    <h2>Live FanWare Lite</h2>
+    <p class="muted">Interactive mock of the in-game menu. State is local to this page — toggles, sliders, executor buffer, console.</p>
+    <div class="lite-wrap" style="margin-top:16px">
+      <div class="lite" id="lite">
+        <div class="lite-title">
+          <span><span class="live-dot" id="liveDot" style="display:none"></span>FanWare Lite</span>
+          <span style="opacity:.75; font-weight:400; font-size:11px">RSHIFT · END</span>
+        </div>
+        <div class="lite-body">
+          <div class="lite-hint">FanWare Lite — external<br/>RSHIFT = open/close · END = exit</div>
+          <div class="lite-tabs" id="tabs">
+            <button class="lite-tab active" data-tab="0">Combat</button>
+            <button class="lite-tab" data-tab="1">Players</button>
+            <button class="lite-tab" data-tab="2">Visuals</button>
+            <button class="lite-tab" data-tab="3">Executor</button>
+            <button class="lite-tab" data-tab="4">Misc</button>
+          </div>
+
+          <div class="lite-panel active" data-panel="0">
+            <div class="lite-row"><input type="checkbox" id="aimbot"/><label for="aimbot">Aimbot</label>
+              <input type="checkbox" id="assist"/><label for="assist">Aim Assist</label></div>
+            <div class="lite-row"><input type="checkbox" id="trigger"/><label for="trigger">TriggerBot</label></div>
+            <div class="slider-label"><span>Smoothness</span><span id="smoothVal">15</span></div>
+            <input type="range" id="smooth" min="0" max="100" value="15"/>
+            <div class="lite-row"><input type="checkbox" id="pred"/><label for="pred">Prediction</label></div>
+            <div class="lite-row" style="margin-top:8px">
+              <label style="flex:0 0 70px">Method</label>
+              <select id="method"><option>CamLock</option><option>Mouse</option></select>
+            </div>
+            <div class="lite-row">
+              <label style="flex:0 0 70px">Part</label>
+              <select id="part"><option>Head</option><option>Torso</option><option>HRP</option></select>
+            </div>
+            <div class="slider-label"><span>FOV</span><span id="fovVal">120</span></div>
+            <input type="range" id="fov" min="10" max="360" value="120"/>
+            <div class="lite-row"><input type="checkbox" id="teamAim" checked/><label for="teamAim">Team Check</label>
+              <input type="checkbox" id="silent"/><label for="silent">Silent Aim</label></div>
+          </div>
+
+          <div class="lite-panel" data-panel="1">
+            <div class="lite-row"><input type="checkbox" id="esp"/><label for="esp">ESP</label></div>
+            <div class="lite-row"><input type="checkbox" id="box" checked/><label for="box">Box</label>
+              <input type="checkbox" id="skel"/><label for="skel">Skeleton</label></div>
+            <div class="lite-row"><input type="checkbox" id="tracers"/><label for="tracers">Tracers</label>
+              <input type="checkbox" id="teamEsp" checked/><label for="teamEsp">Team Check</label></div>
+            <div class="lite-row" style="margin-top:8px"><label>Enemy</label><input type="color" id="enemyCol" value="#ff3344" style="width:48px;height:28px;border:0;background:none"/></div>
+            <div class="lite-row"><label>Team</label><input type="color" id="teamCol" value="#33ff55" style="width:48px;height:28px;border:0;background:none"/></div>
+          </div>
+
+          <div class="lite-panel" data-panel="2">
+            <div class="lite-row"><input type="checkbox" id="stretch"/><label for="stretch">Stretch Res</label></div>
+            <div class="lite-row">
+              <label style="flex:0 0 90px">Stretch Mode</label>
+              <select id="stretchMode"><option>External</option><option>Injector</option></select>
+            </div>
+            <div class="slider-label"><span>Scale X</span><span id="scaleVal">1.25</span></div>
+            <input type="range" id="scaleX" min="80" max="200" value="125"/>
+            <hr style="border:0;border-top:1px solid #222;margin:10px 0"/>
+            <div class="lite-row"><input type="checkbox" id="lighting"/><label for="lighting">Lighting</label></div>
+            <div class="slider-label"><span>Brightness</span><span id="brightVal">2.0</span></div>
+            <input type="range" id="bright" min="0" max="100" value="20"/>
+            <div class="slider-label"><span>Clock</span><span id="clockVal">14.0</span></div>
+            <input type="range" id="clock" min="0" max="240" value="140"/>
+            <div class="lite-row" style="margin-top:8px"><input type="checkbox" id="sky"/><label for="sky">Custom Sky</label></div>
+            <div class="btn-row"><button class="btn-sm" id="unlockBtn">Unlock All</button></div>
+          </div>
+
+          <div class="lite-panel" data-panel="3">
+            <div style="font-size:12px;color:#aaa;margin-bottom:4px">Script</div>
+            <textarea id="src" placeholder="print('hello from FanWare')"></textarea>
+            <div class="btn-row">
+              <button class="btn-sm" id="execBtn">Execute</button>
+              <button class="btn-sm" id="uncBtn">Execute + UNC</button>
+              <button class="btn-sm ghost" id="clearSrc">Clear</button>
+              <button class="btn-sm ghost" id="clearLog">Clear Log</button>
+            </div>
+            <div style="font-size:12px;color:#aaa;margin:6px 0 4px">UNC groups</div>
+            <div class="lite-row">
+              <input type="checkbox" id="uEnv" checked/><label for="uEnv">Env</label>
+              <input type="checkbox" id="uId" checked/><label for="uId">Identity</label>
+              <input type="checkbox" id="uMeta"/><label for="uMeta">Meta</label>
+              <input type="checkbox" id="uClos"/><label for="uClos">Closures</label>
+            </div>
+            <div class="lite-row">
+              <input type="checkbox" id="uFs"/><label for="uFs">FS</label>
+              <input type="checkbox" id="uHttp"/><label for="uHttp">HTTP</label>
+              <input type="checkbox" id="uDraw"/><label for="uDraw">Drawing</label>
+              <input type="checkbox" id="uDbg"/><label for="uDbg">Debug</label>
+            </div>
+            <div class="muted" style="font-size:11px;margin:4px 0 8px">UNC: <span id="uncCount">2</span> / 8</div>
+            <div style="font-size:12px;color:#aaa;margin-bottom:4px">AI helper (local templates)</div>
+            <input type="text" id="aiPrompt" placeholder="esp, speed, fly, noclip, teleport"/>
+            <div class="btn-row"><button class="btn-sm" id="aiBtn">Generate code</button></div>
+            <div style="font-size:12px;color:#aaa;margin:8px 0 4px">Console</div>
+            <div class="lite-console" id="console"></div>
+          </div>
+
+          <div class="lite-panel" data-panel="4">
+            <div style="font-size:12px;color:#aaa">Rage</div>
+            <div class="lite-row"><input type="checkbox" id="rage"/><label for="rage">Rage mode</label></div>
+            <div class="lite-row"><input type="checkbox" id="instant"/><label for="instant">Instant (no smooth)</label></div>
+            <div class="lite-row"><input type="checkbox" id="kill"/><label for="kill">Kill signal (inj)</label></div>
+            <div class="slider-label"><span>Damage mul</span><span id="dmgVal">1.0</span></div>
+            <input type="range" id="dmg" min="5" max="50" value="10"/>
+            <hr style="border:0;border-top:1px solid #222;margin:10px 0"/>
+            <div style="font-size:12px;color:#aaa">Movement</div>
+            <div class="lite-row"><input type="checkbox" id="fly"/><label for="fly">Fly</label>
+              <select id="flyMode" style="max-width:110px"><option>External</option><option>Injector</option></select>
+            </div>
+            <div class="slider-label"><span>Fly speed</span><span id="flyVal">50</span></div>
+            <input type="range" id="flySpd" min="5" max="200" value="50"/>
+            <div class="lite-row"><input type="checkbox" id="noclip"/><label for="noclip">Noclip</label>
+              <select id="ncMode" style="max-width:110px"><option>External</option><option>Injector</option></select>
+            </div>
+            <div class="lite-row"><input type="checkbox" id="speed"/><label for="speed">Speed</label></div>
+            <div class="slider-label"><span>WalkSpeed</span><span id="wsVal">16</span></div>
+            <input type="range" id="ws" min="16" max="200" value="16"/>
+            <div class="slider-label"><span>JumpPower</span><span id="jpVal">50</span></div>
+            <input type="range" id="jp" min="50" max="200" value="50"/>
+            <hr style="border:0;border-top:1px solid #222;margin:10px 0"/>
+            <div style="font-size:12px;color:#aaa">Song / Avatar</div>
+            <input type="text" id="songPath" placeholder="C:\\music\\track.mp3" style="margin:6px 0"/>
+            <div class="btn-row">
+              <button class="btn-sm ghost" id="songLoad">Load</button>
+              <button class="btn-sm ghost" id="songPlay">Play</button>
+              <button class="btn-sm ghost" id="songStop">Stop</button>
+            </div>
+            <div class="lite-row"><input type="checkbox" id="avatar" checked/><label for="avatar">Show Avatar</label></div>
+          </div>
+
+          <div class="lite-foot">
+            Players: <span id="pCount">0</span><br/>
+            Roblox: <span id="robloxState">demo mode</span><br/>
+            Offsets: ready · Reader fails: 0<br/>
+            Bridge: <span id="bridgeState">down</span> · UNC <span id="uncFoot">2</span>/8
+          </div>
+        </div>
+      </div>
+
+      <!-- ESP 3D preview: dummy rotates; overlays follow Players ESP toggles -->
+      <div class="esp3d dim" id="esp3d">
+        <div class="esp3d-title">
+          <span>ESP · 3D dummy</span>
+          <span id="esp3dYaw" style="font-family:IBM Plex Mono,monospace;font-size:10px;opacity:.8">0°</span>
+        </div>
+        <div class="esp3d-body">
+          <canvas id="dummyCanvas" width="280" height="260"></canvas>
+          <div class="esp3d-meta">
+            mirrors <b>Players</b> options in real time.<br/>
+            <span id="esp3dFlags">ESP off</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card side-note">
+          <h3>How this maps to the real binary</h3>
+          <ul>
+            <li><b>Combat / Players / Visuals / Misc</b> write into <code>GlobalConfig</code> — same fields the C++ threads read every tick.</li>
+            <li><b>Execute</b> calls <code>Executor::SetSource</code> → <code>Bridge::Send(ExecScript)</code> when the DLL is injected.</li>
+            <li><b>Execute + UNC</b> prefixes bootstrap + selected UNC stubs, then sends one payload.</li>
+            <li><b>AI helper</b> is local templates (esp / speed / fly / noclip / teleport) — no network.</li>
+            <li>This page is a <b>simulator</b>. It does not attach to Roblox.</li>
+          </ul>
+          <div class="btn-row" style="margin-top:12px">
+            <button class="btn" id="simAttach">simulate attach</button>
+            <button class="btn" id="simBridge">simulate bridge up</button>
+            <button class="btn ghost" id="simPlayers">fake players +3</button>
+          </div>
+          <div class="activity" style="margin-top:14px">
+            <div class="bar"><span>live feed</span><span>attach · execute · capabilities</span></div>
+            <div class="activity-feed" id="activityFeed"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="bar"><span>state snapshot</span><span>json</span></div>
+          <pre id="stateOut" style="border:0;border-radius:0 0 12px 12px;max-height:220px">{}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="toast-stack" id="toastStack"></div>
+
+  <section id="executor">
+    <h2>Executor path</h2>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><b>Paste Luau</b><span class="muted">plain source, no loadstring wrapper</span></div>
+      <div class="step"><div class="n">02</div><b>Optional UNC</b><span class="muted">bootstrap + selected groups</span></div>
+      <div class="step"><div class="n">03</div><b>Bridge send</b><span class="muted">named pipe → DLL queue</span></div>
+      <div class="step"><div class="n">04</div><b>Strategy A</b><span class="muted">ScriptContext arm for live run</span></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="bar"><span>run</span><span>cmd</span></div>
+      <pre style="border:0;border-radius:0 0 12px 12px">cd bin\Release
+FanwareExternal.exe
+FanwareExternal.exe FanwareDLL.dll   :: inject + bridge</pre>
+    </div>
+  </section>
+
+  <section id="build">
+    <h2>Build (Visual Studio)</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>VS solution</h3>
+        <ol class="muted" style="padding-left:18px; line-height:1.7">
+          <li>Open <code>Fanware.sln</code></li>
+          <li>Release · x64</li>
+          <li>Build Solution</li>
+          <li>Outputs under <code>bin\Release\</code></li>
+        </ol>
+        <p class="muted" style="margin-top:10px">ImGui lives in <code>third_party/imgui_clean</code>. <code>FANWARE_HAS_IMGUI</code> is already defined in the vcxproj. <code>packages.config</code> is present — NuGet-aware, no package install required for UI.</p>
+      </div>
+      <div class="card">
+        <h3>Keys</h3>
+        <ul class="muted" style="padding-left:18px; line-height:1.7">
+          <li><b>RSHIFT</b> / Insert — toggle menu</li>
+          <li><b>END</b> — exit</li>
+          <li><b>F6</b> — camera dump</li>
+        </ul>
+        <p class="muted" style="margin-top:10px">Docs: <code>OPEN_IN_VISUAL_STUDIO.md</code>, <code>GETTING_STARTED.md</code>, <code>docs_EXECUTOR.md</code>, <code>docs_UNC.md</code>.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>FanWare External + Injector</span>
+  <span>local demo · not affiliated with Roblox</span>
+</footer>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  // tabs
+  $$('#tabs .lite-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#tabs .lite-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const i = btn.dataset.tab;
+      $$('.lite-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === i));
+      dumpState();
+    });
+  });
+
+  // sliders
+  const bindRange = (id, out, fmt) => {
+    const el = $('#'+id), o = $('#'+out);
+    const sync = () => { o.textContent = fmt(el.value); dumpState(); };
+    el.addEventListener('input', sync); sync();
+  };
+  bindRange('smooth','smoothVal', v => v);
+  bindRange('fov','fovVal', v => v);
+  bindRange('scaleX','scaleVal', v => (v/100).toFixed(2));
+  bindRange('bright','brightVal', v => (v/10).toFixed(1));
+  bindRange('clock','clockVal', v => (v/10).toFixed(1));
+  bindRange('dmg','dmgVal', v => (v/10).toFixed(1));
+  bindRange('flySpd','flyVal', v => v);
+  bindRange('ws','wsVal', v => v);
+  bindRange('jp','jpVal', v => v);
+
+  // console + activity animations
+  const logEl = $('#console');
+  const feedEl = $('#activityFeed');
+  const capStage = $('#capStage');
+  const toastStack = $('#toastStack');
+
+  function log(msg, level=0){
+    const d = document.createElement('div');
+    d.className = 'line l'+level;
+    d.textContent = msg;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function feed(title, detail, kind='ok'){
+    if (!feedEl) return;
+    const t = new Date();
+    const hh = String(t.getHours()).padStart(2,'0');
+    const mm = String(t.getMinutes()).padStart(2,'0');
+    const ss = String(t.getSeconds()).padStart(2,'0');
+    const item = document.createElement('div');
+    item.className = 'act-item ' + kind;
+    item.innerHTML = `<div class="act-dot"></div>
+      <div class="act-body"><b>${title}</b><span>${detail||''}</span></div>
+      <div class="act-time">${hh}:${mm}:${ss}</div>`;
+    feedEl.prepend(item);
+    while (feedEl.children.length > 14) feedEl.removeChild(feedEl.lastChild);
+  }
+
+  function toast(msg, kind='ok'){
+    if (!toastStack) return;
+    const el = document.createElement('div');
+    el.className = 'toast ' + kind;
+    el.textContent = msg;
+    toastStack.appendChild(el);
+    setTimeout(()=>{ el.classList.add('hide'); setTimeout(()=>el.remove(), 320); }, 2400);
+  }
+
+  function pulsePill(id){
+    const el = $('#'+id);
+    if (!el) return;
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+  }
+
+  function setPill(id, up, label){
+    const el = $('#'+id);
+    if (!el) return;
+    el.className = up ? 'up' : 'down';
+    if (label) el.textContent = label;
+    pulsePill(id);
+  }
+
+  const CAPS = {
+    attach: [
+      {t:'Players walk', k:'ext'},
+      {t:'Camera / ViewMatrix', k:'ext'},
+      {t:'Aimbot CamLock', k:'ext'},
+      {t:'ESP boxes', k:'ext'},
+      {t:'Stretch / Lighting', k:'ext'},
+      {t:'Fly · Speed · Noclip', k:'ext'}
+    ],
+    bridge: [
+      {t:'ExecScript queue', k:'inj'},
+      {t:'UNC bootstrap', k:'inj'},
+      {t:'Sky inject', k:'inj'},
+      {t:'Strategy A arm', k:'inj'}
+    ],
+    exec: [
+      {t:'Luau payload', k:'inj'},
+      {t:'print → console', k:'inj'}
+    ],
+    unc: [
+      {t:'identity hooks', k:'inj'},
+      {t:'filesystem stubs', k:'inj'},
+      {t:'http / drawing', k:'inj'}
+    ]
+  };
+
+  function showCaps(group){
+    if (!capStage) return;
+    const list = CAPS[group] || [];
+    // clear old chips of this wave after a beat
+    list.forEach((c, i) => {
+      setTimeout(()=>{
+        const chip = document.createElement('span');
+        chip.className = 'cap-chip ' + (c.k||'');
+        chip.textContent = c.t;
+        capStage.appendChild(chip);
+        setTimeout(()=>{
+          chip.classList.add('out');
+          setTimeout(()=>chip.remove(), 320);
+        }, 3200 + i*120);
+      }, i * 90);
+    });
+  }
+
+  let bridgeUp = false;
+  let attached = false;
+  let players = 0;
+
+  function uncCount(){
+    return ['uEnv','uId','uMeta','uClos','uFs','uHttp','uDraw','uDbg']
+      .filter(id => $('#'+id).checked).length;
+  }
+  function refreshUnc(){
+    const n = uncCount();
+    $('#uncCount').textContent = n;
+    $('#uncFoot').textContent = n;
+  }
+  ['uEnv','uId','uMeta','uClos','uFs','uHttp','uDraw','uDbg'].forEach(id => {
+    $('#'+id).addEventListener('change', () => { refreshUnc(); dumpState(); });
+  });
+
+  function setBridge(up){
+    bridgeUp = up;
+    $('#bridgeState').textContent = up ? 'up' : 'down';
+    setPill('bridgePill', up, up ? 'bridge up' : 'bridge down');
+    setPill('pillQueue', up, up ? 'executor queue' : 'executor queue');
+    if (up) {
+      showCaps('bridge');
+      feed('Bridge connected', 'named pipe ready · ExecScript + UNC path live', 'ok');
+      toast('Bridge up — executor can send', 'ok');
+    } else {
+      feed('Bridge down', 'inject FanwareDLL.dll to restore queue', 'warn');
+    }
+    dumpState();
+  }
+
+  function setAttached(on){
+    attached = on;
+    const lite = $('#lite');
+    const dot = $('#liveDot');
+    if (lite) lite.classList.toggle('attached', on);
+    if (dot) dot.style.display = on ? 'inline-block' : 'none';
+    setPill('pillAttach', on, on ? 'external attach' : 'external attach');
+    setPill('pillOverlay', on, on ? 'dx11 overlay' : 'dx11 overlay');
+    if (on) {
+      $('#robloxState').textContent = 'PID sim · attached';
+      showCaps('attach');
+      feed('Attached to RobloxPlayerBeta', 'DataModel resolved · players / camera / aim path online', 'ok');
+      log('[+] Attached (sim)', 0);
+      log('[+] DataModel ready', 0);
+      toast('External attached', 'ok');
+      if (players < 1) {
+        players = 6;
+        $('#pCount').textContent = players;
+      }
+    } else {
+      $('#robloxState').textContent = 'demo mode';
+      feed('Detached', 'external-only idle', 'warn');
+      log('[-] Detached (sim)', 1);
+    }
+    dumpState();
+  }
+
+  $('#simAttach').addEventListener('click', () => setAttached(!attached));
+  $('#simBridge').addEventListener('click', () => {
+    setBridge(!bridgeUp);
+    log(bridgeUp ? 'bridge connected (sim)' : 'bridge disconnected (sim)', bridgeUp ? 0 : 1);
+  });
+  $('#simPlayers').addEventListener('click', () => {
+    players += 3;
+    $('#pCount').textContent = players;
+    feed('Players cache', players + ' entities in list', 'ok');
+    log('players cache → ' + players, 0);
+    dumpState();
+  });
+
+  $('#execBtn').addEventListener('click', () => {
+    const src = $('#src').value.trim();
+    if (!src) { log('empty script', 1); feed('Execute blocked', 'empty script', 'warn'); return; }
+    if (!bridgeUp) { log('bridge not connected — inject DLL first', 2); feed('Execute blocked', 'bridge down — inject DLL', 'err'); toast('Bridge down', 'err'); return; }
+    log('sent (' + src.length + ' bytes)', 0);
+    log('> queue → ScriptContext', 0);
+    showCaps('exec');
+    feed('Execute', src.length + ' bytes queued on bridge', 'ok');
+    toast('Script sent (' + src.length + ' B)', 'ok');
+    // pretend print feedback
+    setTimeout(()=>{
+      log('[game] script started', 0);
+      feed('Runtime', 'payload accepted by queue (sim)', 'ok');
+    }, 400);
+  });
+  $('#uncBtn').addEventListener('click', () => {
+    const src = $('#src').value.trim();
+    if (!src) { log('empty script', 1); feed('UNC execute blocked', 'empty script', 'warn'); return; }
+    if (!bridgeUp) { log('bridge not connected — inject DLL first', 2); feed('UNC execute blocked', 'bridge down', 'err'); toast('Bridge down', 'err'); return; }
+    const n = uncCount();
+    const bytes = src.length + 120 + n*40;
+    log('sent UNC bootstrap+stub (' + bytes + ' bytes)', 0);
+    showCaps('unc');
+    feed('Execute + UNC', n + ' groups · ' + bytes + ' bytes', 'ok');
+    toast('UNC payload sent', 'ok');
+  });
+  $('#clearSrc').addEventListener('click', () => { $('#src').value = ''; dumpState(); });
+  $('#clearLog').addEventListener('click', () => { logEl.innerHTML = ''; });
+
+  const templates = {
+    esp: `-- ESP skeleton (template)
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+for _,p in ipairs(Players:GetPlayers()) do
+  if p ~= lp and p.Character then
+    print("track", p.Name)
+  end
+end`,
+    speed: `-- WalkSpeed template
+local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+if hum then hum.WalkSpeed = 50 end`,
+    fly: `-- Fly stub (template)
+print("fly template — wire to BodyVelocity / LinearVelocity")`,
+    noclip: `-- Noclip stub
+local char = game.Players.LocalPlayer.Character
+if char then for _,d in ipairs(char:GetDescendants()) do if d:IsA("BasePart") then d.CanCollide = false end end end`,
+    teleport: `-- Teleport template
+local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if hrp then hrp.CFrame = hrp.CFrame + Vector3.new(0, 20, 0) end`
+  };
+  $('#aiBtn').addEventListener('click', () => {
+    const q = ($('#aiPrompt').value || '').toLowerCase();
+    let key = Object.keys(templates).find(k => q.includes(k));
+    if (!key) key = 'esp';
+    $('#src').value = templates[key];
+    log('AI generated for: ' + (q || key), 0);
+    dumpState();
+  });
+
+  $('#unlockBtn').addEventListener('click', () => log('Unlock All requested (sim)', 0));
+  $('#songLoad').addEventListener('click', () => log('song load: ' + ($('#songPath').value || '(empty)'), 0));
+  $('#songPlay').addEventListener('click', () => log('song play', 0));
+  $('#songStop').addEventListener('click', () => log('song stop', 0));
+
+  $$('.lite input, .lite select, .lite textarea').forEach(el => {
+    el.addEventListener('change', dumpState);
+    el.addEventListener('input', () => { if (el.tagName === 'TEXTAREA' || el.type === 'text') dumpState(); });
+  });
+
+  function dumpState(){
+    const st = {
+      aimbot: $('#aimbot').checked,
+      assist: $('#assist').checked,
+      trigger: $('#trigger').checked,
+      smooth: +$('#smooth').value,
+      fov: +$('#fov').value,
+      method: $('#method').value,
+      part: $('#part').value,
+      silent: $('#silent').checked,
+      esp: $('#esp').checked,
+      stretch: $('#stretch').checked,
+      scaleX: (+$('#scaleX').value)/100,
+      lighting: $('#lighting').checked,
+      sky: $('#sky').checked,
+      fly: $('#fly').checked,
+      noclip: $('#noclip').checked,
+      speed: $('#speed').checked,
+      rage: $('#rage').checked,
+      unc: uncCount(),
+      bridge: bridgeUp ? 'up' : 'down',
+      players,
+      scriptBytes: $('#src').value.length
+    };
+    $('#stateOut').textContent = JSON.stringify(st, null, 2);
+  }
+
+  // ——— ESP 3D dummy (canvas wireframe, 360° spin) ———
+  const canvas = $('#dummyCanvas');
+  const esp3d = $('#esp3d');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  let yaw = 0;
+
+  // simple R6-ish bone layout in model space (Y up)
+  const bones = {
+    head:  [0, 1.55, 0],
+    torso: [0, 1.05, 0],
+    hrp:   [0, 0.85, 0],
+    larm:  [-0.55, 1.15, 0],
+    rarm:  [ 0.55, 1.15, 0],
+    lhand: [-0.55, 0.65, 0],
+    rhand: [ 0.55, 0.65, 0],
+    lleg:  [-0.22, 0.45, 0],
+    rleg:  [ 0.22, 0.45, 0],
+    lfoot: [-0.22, 0.05, 0],
+    rfoot: [ 0.22, 0.05, 0]
+  };
+  const links = [
+    ['head','torso'],['torso','hrp'],
+    ['torso','larm'],['larm','lhand'],
+    ['torso','rarm'],['rarm','rhand'],
+    ['hrp','lleg'],['lleg','lfoot'],
+    ['hrp','rleg'],['rleg','rfoot']
+  ];
+
+  function hexToRgb(hex){
+    const h = (hex||'#ff3344').replace('#','');
+    const n = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h, 16);
+    return [(n>>16)&255, (n>>8)&255, n&255];
+  }
+
+  function project(x,y,z, ang){
+    const c = Math.cos(ang), s = Math.sin(ang);
+    const xr = x*c + z*s;
+    const zr = -x*s + z*c;
+    const scale = 95;
+    const cx = canvas.width * 0.5;
+    const cy = canvas.height * 0.72;
+    return [cx + xr * scale, cy - y * scale, zr];
+  }
+
+  function drawDummy(){
+    if (!ctx || !canvas) return;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    // floor grid
+    ctx.strokeStyle = 'rgba(80,100,140,0.25)';
+    ctx.lineWidth = 1;
+    for (let i=-3;i<=3;i++){
+      const a = project(i*0.35, 0, -1.2, yaw);
+      const b = project(i*0.35, 0,  1.2, yaw);
+      ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+      const c1 = project(-1.2, 0, i*0.35, yaw);
+      const c2 = project( 1.2, 0, i*0.35, yaw);
+      ctx.beginPath(); ctx.moveTo(c1[0],c1[1]); ctx.lineTo(c2[0],c2[1]); ctx.stroke();
+    }
+
+    const espOn = $('#esp') && $('#esp').checked;
+    const boxOn = $('#box') && $('#box').checked;
+    const skelOn = $('#skel') && $('#skel').checked;
+    const trOn = $('#tracers') && $('#tracers').checked;
+    const [er,eg,eb] = hexToRgb($('#enemyCol') ? $('#enemyCol').value : '#ff3344');
+    const col = `rgba(${er},${eg},${eb},0.95)`;
+    const colDim = `rgba(${er},${eg},${eb},0.35)`;
+
+    // body wire always faint
+    const pts = {};
+    Object.keys(bones).forEach(k => {
+      const p = bones[k];
+      pts[k] = project(p[0], p[1], p[2], yaw);
+    });
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = espOn && skelOn ? col : 'rgba(180,190,210,0.55)';
+    links.forEach(([a,b]) => {
+      ctx.beginPath();
+      ctx.moveTo(pts[a][0], pts[a][1]);
+      ctx.lineTo(pts[b][0], pts[b][1]);
+      ctx.stroke();
+    });
+    // joints
+    ctx.fillStyle = espOn && skelOn ? col : 'rgba(200,210,230,0.7)';
+    Object.values(pts).forEach(p => {
+      ctx.beginPath(); ctx.arc(p[0], p[1], 3.2, 0, Math.PI*2); ctx.fill();
+    });
+
+    if (espOn && boxOn) {
+      const xs = Object.values(pts).map(p=>p[0]);
+      const ys = Object.values(pts).map(p=>p[1]);
+      const minX = Math.min(...xs) - 10, maxX = Math.max(...xs) + 10;
+      const minY = Math.min(...ys) - 8,  maxY = Math.max(...ys) + 8;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.8;
+      ctx.strokeRect(minX, minY, maxX-minX, maxY-minY);
+      // corner accents
+      const L = 10;
+      ctx.beginPath();
+      ctx.moveTo(minX, minY+L); ctx.lineTo(minX, minY); ctx.lineTo(minX+L, minY);
+      ctx.moveTo(maxX-L, minY); ctx.lineTo(maxX, minY); ctx.lineTo(maxX, minY+L);
+      ctx.moveTo(minX, maxY-L); ctx.lineTo(minX, maxY); ctx.lineTo(minX+L, maxY);
+      ctx.moveTo(maxX-L, maxY); ctx.lineTo(maxX, maxY); ctx.lineTo(maxX, maxY-L);
+      ctx.stroke();
+    }
+
+    if (espOn && trOn) {
+      const foot = pts.hrp;
+      ctx.strokeStyle = colDim;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(w*0.5, h-6);
+      ctx.lineTo(foot[0], foot[1]);
+      ctx.stroke();
+    }
+
+    if (espOn) {
+      ctx.fillStyle = col;
+      ctx.font = '11px IBM Plex Mono, monospace';
+      ctx.fillText('Dummy [100]', pts.head[0] + 10, pts.head[1] - 8);
+    }
+
+    // flags label
+    const flags = [];
+    if (!espOn) flags.push('ESP off');
+    else {
+      flags.push('ESP');
+      if (boxOn) flags.push('box');
+      if (skelOn) flags.push('skeleton');
+      if (trOn) flags.push('tracers');
+    }
+    const fl = $('#esp3dFlags');
+    if (fl) fl.textContent = flags.join(' · ');
+    if (esp3d) esp3d.classList.toggle('dim', !espOn);
+    const yd = $('#esp3dYaw');
+    if (yd) yd.textContent = ((yaw * 180 / Math.PI) % 360 | 0) + '°';
+  }
+
+  function tickDummy(ts){
+    yaw = (ts / 1000) * 0.7; // ~full turn ~9s
+    drawDummy();
+    requestAnimationFrame(tickDummy);
+  }
+  if (ctx) requestAnimationFrame(tickDummy);
+
+  // redraw when ESP options change
+  ['esp','box','skel','tracers','enemyCol','teamCol'].forEach(id => {
+    const el = $('#'+id);
+    if (el) el.addEventListener('input', drawDummy);
+    if (el) el.addEventListener('change', drawDummy);
+  });
+
+  log('FanWare Lite demo ready', 0);
+  feed('Demo', 'auto-tour starting…', 'ok');
+  refreshUnc();
+  dumpState();
+
+  // ——— full interactive tour ———
+  function selectTab(i){
+    const btn = document.querySelector('#tabs .lite-tab[data-tab="'+i+'"]');
+    if (btn) btn.click();
+  }
+  function setCheck(id, on){
+    const el = $('#'+id);
+    if (!el) return;
+    el.checked = !!on;
+    el.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+  function setRange(id, val){
+    const el = $('#'+id);
+    if (!el) return;
+    el.value = val;
+    el.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  async function runFullDemo(){
+    await sleep(600);
+    feed('Tour', '1/8 attach external', 'ok');
+    if (!attached) setAttached(true);
+    await sleep(1200);
+
+    selectTab(0);
+    feed('Tour', '2/8 Combat — aimbot + trigger + silent', 'ok');
+    setCheck('aimbot', true);
+    setCheck('assist', true);
+    setCheck('trigger', true);
+    setCheck('pred', true);
+    setCheck('silent', true);
+    setRange('smooth', 22);
+    setRange('fov', 140);
+    log('[combat] aimbot on · FOV 140 · CamLock', 0);
+    await sleep(1100);
+
+    selectTab(1);
+    feed('Tour', '3/8 Players — ESP boxes / tracers', 'ok');
+    setCheck('esp', true);
+    setCheck('box', true);
+    setCheck('skel', true);
+    setCheck('tracers', true);
+    log('[esp] boxes + skeleton + tracers', 0);
+    if (players < 6) { players = 9; $('#pCount').textContent = players; }
+    await sleep(1000);
+
+    selectTab(2);
+    feed('Tour', '4/8 Visuals — stretch + lighting + sky', 'ok');
+    setCheck('stretch', true);
+    setRange('scaleX', 135);
+    setCheck('lighting', true);
+    setRange('bright', 35);
+    setRange('clock', 180);
+    setCheck('sky', true);
+    log('[visuals] stretch 1.35 · brightness 3.5 · sky on', 0);
+    await sleep(1000);
+
+    selectTab(4);
+    feed('Tour', '5/8 Misc — rage / fly / speed', 'ok');
+    setCheck('rage', true);
+    setCheck('fly', true);
+    setRange('flySpd', 80);
+    setCheck('speed', true);
+    setRange('ws', 48);
+    setRange('jp', 90);
+    setCheck('noclip', true);
+    log('[misc] fly 80 · walk 48 · jump 90 · noclip', 0);
+    await sleep(1100);
+
+    selectTab(3);
+    feed('Tour', '6/8 bridge + AI helper', 'ok');
+    if (!bridgeUp) setBridge(true);
+    await sleep(700);
+    $('#aiPrompt').value = 'esp';
+    $('#aiBtn').click();
+    await sleep(900);
+    $('#aiPrompt').value = 'speed';
+    $('#aiBtn').click();
+    await sleep(700);
+    $('#aiPrompt').value = 'teleport';
+    $('#aiBtn').click();
+    await sleep(800);
+
+    // enable a few UNC groups then execute
+    setCheck('uEnv', true);
+    setCheck('uId', true);
+    setCheck('uFs', true);
+    setCheck('uHttp', true);
+    setCheck('uDraw', true);
+    refreshUnc();
+    feed('Tour', '7/8 Execute + UNC payload', 'ok');
+    $('#src').value = templates.esp + '\n\n-- auto demo payload\nprint("FanWare tour ok")\n';
+    dumpState();
+    await sleep(400);
+    $('#uncBtn').click();
+    await sleep(900);
+    $('#execBtn').click();
+    await sleep(800);
+
+    feed('Tour', '8/8 complete — UI + executor + AI simulated', 'ok');
+    toast('Full demo finished', 'ok');
+    log('=== tour complete ===', 0);
+    log('toggles left as-is so you can poke the menu', 1);
+  }
+
+  // optional: button to replay
+  const replay = document.createElement('button');
+  replay.className = 'btn ghost';
+  replay.id = 'btnReplayTour';
+  replay.type = 'button';
+  replay.textContent = 'replay full demo';
+  replay.style.marginLeft = '8px';
+  const row = document.querySelector('.side-note .btn-row');
+  if (row) row.appendChild(replay);
+  replay.addEventListener('click', () => { runFullDemo(); });
+
+  runFullDemo();
+})();
+</script>
+</body>
+</html>
